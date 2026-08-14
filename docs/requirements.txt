@@ -1,0 +1,4 @@
+# docs build only — heavy runtime deps are mocked in conf.py
+sphinx
+myst-nb
+sphinx-book-theme

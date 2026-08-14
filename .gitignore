@@ -1,0 +1,25 @@
+# pipeline outputs (training data, posteriors, figures)
+runs/
+
+# large data not distributed with the repo
+UDS/*
+!UDS/VWSC_eigenbasis*.fits
+Bagpipes_grids/
+evecs_*.sav
+
+# python
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+
+# notebooks
+.ipynb_checkpoints/
+
+# docs build
+docs/_build/
+
+# OS
+.DS_Store
+.claude/

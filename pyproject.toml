@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bagpus"
+version = "0.1.0"
+description = "Bayesian Analysis of Galaxy PopUlations with Spectra: hierarchical population inference for galaxy surveys with simulation-based inference"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GPL-3.0-or-later" }
+authors = [
+    { name = "Vivienne Wild", email = "vw8@st-andrews.ac.uk" },
+]
+keywords = ["astronomy", "galaxies", "SED fitting", "simulation-based inference"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Astronomy",
+]
+
+dependencies = [
+    "numpy",
+    "scipy>=1.15",          # scipy.optimize.elementwise
+    "astropy",
+    "matplotlib",
+    "scikit-learn",
+    "torch",
+    "sbi",
+    "bagpipes",
+    "fast_histogram",
+    "joblib",
+]
+
+[project.optional-dependencies]
+docs = [
+    "sphinx",
+    "myst-nb",
+    "sphinx-book-theme",
+]
+
+[project.urls]
+Repository = "https://github.com/vwild/bagpus"
+
+[tool.setuptools.packages.find]
+include = ["bagpus*"]
