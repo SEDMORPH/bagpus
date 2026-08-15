@@ -74,19 +74,25 @@ def func_tauquench_0p2tH(sfh):
 
 
 def func_tauquench_simba(sfh):
-    """ Numerical function to calculate when SFR drops from 1/tH to 0.2/t_H"""
+    """ Numerical function to calculate when SFR drops from 1/tH to 0.2/t_H
+    This will pick up first time it drops below 1 and last time it is above 0.2 i.e. 
+    may not be indicative of quenching time in anything other than unimodal SFH"""
 
+    # sfh starts at age=0. Need to reverse to get it to start at t=0. Then reverse again to get cummass to match other age arrays.
     cummass = (np.cumsum(sfh.sfh[::-1] * sfh.age_widths[::-1]))[::-1]
 
     ssfr = sfh.sfh / cummass
     ind_maxsfh = np.argmax(sfh.sfh)
     age_peak = sfh.ages[ind_maxsfh]
 
+    # find all indices where ssfr meets criterium and ages more recent than peak SFH
+    # sfh.age_of_universe is in years and assumes bagpipes cosmology
     ind = np.where((ssfr > 0.2 / (sfh.age_of_universe - sfh.ages))
                    & (ssfr < 1 / (sfh.age_of_universe - sfh.ages))
                    & (sfh.ages < age_peak))[0]
 
     if len(ind) > 0:
+        # ages goes from zero back in time (up in age), so need the last index
         tauquench = (sfh.ages[ind[-1]] - sfh.ages[ind[0]]) / 1e9
     else:
         tauquench = -99
@@ -113,15 +119,22 @@ def func_tauquench_ST(sfh):
 
     return tauquench
 
+#def func_t90(sfh):
+#    """ The lookback time (age) at which 90% of the mass is formed """
+#    cummass = (np.cumsum(sfh.sfh[::-1] * sfh.age_widths[::-1]))[::-1]
+#    ind = np.argmin(abs(cummass - 0.9 * 10**sfh.formed_mass))
+#    t90 = sfh.ages[ind] / 1e9
+#    return t90
 
-def func_t90(sfh):
-    """ The lookback time at which 90% of the mass is formed """
-    cummass = (np.cumsum(sfh.sfh[::-1] * sfh.age_widths[::-1]))[::-1]
-    ind = np.argmin(abs(cummass - 0.9 * 10**sfh.formed_mass))
-    t90 = sfh.ages[ind] / 1e9
+def func_tXX(sfh,XX):
+    """ The cosmic time in Gyr at which fraction XX of the mass is formed e.g. set XX=0.9 for t90."""
+    """ Input bagpipes sfh structure, XX is fraction of mass formed. """
 
-    return t90
-
+    cummass = (np.cumsum(sfh.sfh[::-1]*sfh.age_widths[::-1]))[::-1]
+    ind = np.argmin(abs(cummass-XX*np.max(cummass)))
+    t_cum = (sfh.age_of_universe-sfh.ages[ind])/1e9
+    
+    return t_cum
 
 def props_from_sfh(sfh):
     """ Extract the standard set of derived properties from a single bagpipes
@@ -139,7 +152,9 @@ def props_from_sfh(sfh):
         props['ssfr'] = -24  # set to arbitrary low number, otherwise dust becomes undefined
     props['tquench'] = sfh.tquench
     props['tform'] = sfh.tform
-    props['t90'] = func_t90(sfh)
+    props['t10']=func_tXX(sfh,0.1)
+    props['t50']=func_tXX(sfh,0.5)
+    props['t90']=func_tXX(sfh,0.9)
     props['tauquench_ST'] = func_tauquench_ST(sfh)
     props['tauquench_simba'] = func_tauquench_simba(sfh)
     props['tauquench_init'], props['age_peak'] = func_tauquench(sfh)
@@ -148,7 +163,7 @@ def props_from_sfh(sfh):
     return props
 
 
-DERIVED_PROP_NAMES = ['unphysical', 'ssfr', 'tquench', 'tform', 't90',
+DERIVED_PROP_NAMES = ['unphysical', 'ssfr', 'tquench', 'tform', 't10', 't50', 't90',
                       'tauquench_ST', 'tauquench_simba', 'tauquench_init',
                       'age_peak', 'tauquench_full']
 
