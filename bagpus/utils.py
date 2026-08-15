@@ -18,8 +18,9 @@ import torch
 # Quenching timescales and other properties of a bagpipes SFH object
 # ---------------------------------------------------------------------------
 
-def func_tauquench(sfh):
-    """ Numerical function to use SFH to calculate the time it takes to decrease from peak SFR to half of peak. Input bagpipes sfh. """
+def func_tauquench_init(sfh):
+    """ Numerical function to use SFH to calculate the time it takes to decrease from peak SFR to half of peak. 
+    Input bagpipes sfh. Note this does not work well on multi-modal SFHs"""
 
     ind_maxsfh = np.argmax(sfh.sfh)
     age_peak = sfh.ages[ind_maxsfh]
@@ -157,7 +158,7 @@ def props_from_sfh(sfh):
     props['t90']=func_tXX(sfh,0.9)
     props['tauquench_ST'] = func_tauquench_ST(sfh)
     props['tauquench_simba'] = func_tauquench_simba(sfh)
-    props['tauquench_init'], props['age_peak'] = func_tauquench(sfh)
+    props['tauquench_init'], props['age_peak'] = func_tauquench_init(sfh)
     props['tauquench_full'], _ = func_tauquench_full(sfh)
 
     return props
