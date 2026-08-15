@@ -99,7 +99,9 @@ _DERIVED_LIMS = {
     'ssfr':    ([-14, -7], r"$\log_{10}({\rm sSFR/yr^{-1}})$"),
     'tform':   (None,      r'$t_{\rm form}/{\rm Gyr}$'),
     'tquench': (None,      r'$t_{\rm quench}/{\rm Gyr}$'),
-    't90':     (None,      r'$t_{\rm 90}/{\rm Gyr\ (lookback)}$'),
+    't10':     (None,      r'$t_{\rm 10}/{\rm Gyr}$'),
+    't50':     (None,      r'$t_{\rm 50}/{\rm Gyr}$'),
+    't90':     (None,      r'$t_{\rm 90}/{\rm Gyr}$'),
     'Av':      ([0, 4],    r'${\rm A_{V,ISM}/ mag}$'),
     'fquench': ([0, 1],    'Quenched fraction'),
 }
