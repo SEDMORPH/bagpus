@@ -6,6 +6,12 @@ def read_eigensystem(evecfile, filterfile, verbose=True):
     '''
     This routine reads in the eigenbasis of super colours in .fits format and
     spits out the wavelength, eigenvectors, variance  and mean spectrum.
+
+    The filter list file has one filter per row: filename, then effective
+    wavelength in Angstroms. The effective wavelengths are part of the
+    eigenbasis definition — they must be the values used when the eigenbasis
+    was constructed, NOT recomputed from the transmission curves (different
+    definitions differ by ~0.5% per band, enough to bias the super-colours).
     '''
     fits_path = str(evecfile)
     hdul = fits.open(fits_path) # Read in .fits file
