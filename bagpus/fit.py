@@ -136,7 +136,7 @@ class Fit:
     # Training: PCA compression + neural posterior estimation
     # ------------------------------------------------------------------
     def train(self, n_pca_components=20, pca_floor=0.0001, density_estimator='maf',
-              force=False, diagnostic_plot=False):
+              force=False, diagnostic_plot=False, show_progress=False):
         """ Compress the training simulations with PCA and train the neural
         posterior estimator. Both products are cached on disk.
 
@@ -170,7 +170,10 @@ class Fit:
 
         print('Training neural posterior estimator...')
         neural_posterior = posterior_nn(model=density_estimator)
-        inference = NPE(prior=self.prior, density_estimator=neural_posterior)
+        # show_progress=False suppresses sbi's per-epoch ticker, which floods
+        # saved notebook outputs (carriage returns become one line per epoch)
+        inference = NPE(prior=self.prior, density_estimator=neural_posterior,
+                        show_progress_bars=show_progress)
 
         x_r_tensor = torch.as_tensor(np.float32(x_r))
         posterior_net = inference.append_simulations(theta, x_r_tensor).train()
