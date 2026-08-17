@@ -18,6 +18,21 @@ import torch
 # Quenching timescales and other properties of a bagpipes SFH object
 # ---------------------------------------------------------------------------
 
+def _ssfr_history(sfh):
+    """ The sSFR in every age bin of a bagpipes SFH.
+
+    bagpipes uses a fixed age grid extending to the z=0 age of the Universe,
+    so bins at lookback ages earlier than the big bang (from the observation
+    redshift) have SFR = 0 and zero cumulative mass. Those bins are set to
+    NaN explicitly — threshold comparisons then exclude them (NaN compares
+    False) without raising 0/0 RuntimeWarnings. """
+    # sfh starts at age=0. Need to reverse to get it to start at t=0. Then reverse again to get cummass to match other age arrays.
+    cummass = (np.cumsum(sfh.sfh[::-1] * sfh.age_widths[::-1]))[::-1]  # Msol/yr * yr -> Msol
+    ssfr = np.divide(sfh.sfh, cummass,
+                     out=np.full(len(cummass), np.nan), where=cummass > 0)  # /yr
+    return ssfr
+
+
 def func_tauquench_init(sfh):
     """ Numerical function to use SFH to calculate the time it takes to decrease from peak SFR to half of peak. 
     Input bagpipes sfh. Note this does not work well on multi-modal SFHs"""
@@ -52,10 +67,7 @@ def func_tauquench_full(sfh):
 def func_tauquench_0p2tH(sfh):
     """ Numerical function to calculate when SFR drops from peak to below 0.2/t_H. This is very similar to tauquench_full."""
 
-    # sfh starts at age=0. Need to reverse to get it to start at t=0. Then reverse again to get cummass to match other age arrays.
-    cummass = (np.cumsum(sfh.sfh[::-1] * sfh.age_widths[::-1]))[::-1]  # Msol/yr * yr -> Msol
-
-    ssfr = sfh.sfh / cummass  # Msol/yr / Msol -> /yr
+    ssfr = _ssfr_history(sfh)
     ind_maxsfh = np.argmax(sfh.sfh)
     age_peak = sfh.ages[ind_maxsfh]
 
@@ -76,13 +88,10 @@ def func_tauquench_0p2tH(sfh):
 
 def func_tauquench_simba(sfh):
     """ Numerical function to calculate when SFR drops from 1/tH to 0.2/t_H
-    This will pick up first time it drops below 1 and last time it is above 0.2 i.e. 
+    This will pick up first time it drops below 1 and last time it is above 0.2 i.e.
     may not be indicative of quenching time in anything other than unimodal SFH"""
 
-    # sfh starts at age=0. Need to reverse to get it to start at t=0. Then reverse again to get cummass to match other age arrays.
-    cummass = (np.cumsum(sfh.sfh[::-1] * sfh.age_widths[::-1]))[::-1]
-
-    ssfr = sfh.sfh / cummass
+    ssfr = _ssfr_history(sfh)
     ind_maxsfh = np.argmax(sfh.sfh)
     age_peak = sfh.ages[ind_maxsfh]
 
@@ -104,9 +113,7 @@ def func_tauquench_simba(sfh):
 def func_tauquench_ST(sfh):
     """ Numerical function to calculate quenching timescale following Tachella et al. 2022"""
 
-    cummass = (np.cumsum(sfh.sfh[::-1] * sfh.age_widths[::-1]))[::-1]
-
-    ssfr = sfh.sfh / cummass
+    ssfr = _ssfr_history(sfh)
     ind_maxsfh = np.argmax(sfh.sfh)
 
     ind = np.where((ssfr < 1 / (3 * (sfh.age_of_universe - sfh.ages)))
