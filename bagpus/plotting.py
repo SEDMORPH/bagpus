@@ -304,13 +304,26 @@ def plot_draws(pdf_2d, pdf_recon, pdf_2d_samples, popmodel, savefig=False, figna
     return gs
 
 
-def plot_residuals(pdf_data, pdf_recon, pdf_2d_samples, popmodel, savefig=False,
-                   figname='tmp.png', vmin=-5, vmax=4, title='Data', nsim=7000):
-    """ As plot_draws but showing normalised residuals (data - model)/sigma.
-    nsim must match the ngal used in the simulator. """
+def plot_residuals(pdf_data, pdf_recon, pdf_2d_samples, popmodel, meanarr, pca,
+                   ngal=None, floor=0.0001, savefig=False,
+                   figname='tmp.png', vmin=-4, vmax=4, title='Data'):
+    """ As plot_draws but showing Poisson-normalised residuals
+    (n_obs - n_exp)/sqrt(n_exp).
 
-    ngal = len(popmodel['redshifts'])
-    err_poisson = np.sqrt(pdf_data * ngal)  # this is just the data, and useful for the reconstruction plot
+    The expected counts n_exp come from the PCA reconstruction of each
+    posterior-sample image (a denoised model expectation), NOT the noisy
+    simulated histogram itself; chi^2_nu is the mean of the squared residuals.
+    Cells with <1 expected galaxy and 0 observed galaxies are masked from both
+    the maps and chi^2.
+
+    ngal is the number of observed galaxies (defaults to the size of the
+    sample in popmodel); floor must match the PCA training floor (Fit passes
+    it automatically). """
+
+    pdf_data = np.asarray(pdf_data)
+    pdf_recon = np.asarray(pdf_recon)
+    if ngal is None:
+        ngal = len(popmodel['redshifts'])
 
     pdf_range = popmodel['pdf_range']
 
@@ -338,9 +351,10 @@ def plot_residuals(pdf_data, pdf_recon, pdf_2d_samples, popmodel, savefig=False,
     ax.set_aspect('auto')
     ax.set_ylabel('SC2', fontsize=14)
 
-    # next plot PCA reconstruction
+    # next plot residual wrt PCA reconstruction, using PCA reconstruction as ground truth for errors
     ax = fig.add_subplot(gs[0, 1])
-    ax.imshow((ngal * (pdf_data - pdf_recon) / err_poisson).T, cmap='rainbow', vmin=vmin, vmax=vmax,
+    pdf_recon_plot = np.where((pdf_recon * ngal < 1) & (pdf_data == 0), np.nan, pdf_recon)  # mask small probs where very few galaxies expected
+    ax.imshow((np.sqrt(ngal) * (pdf_data - pdf_recon_plot) / np.sqrt(pdf_recon)).T, cmap='bwr', vmin=vmin, vmax=vmax,
               extent=[pdf_range[0][0], pdf_range[0][1], pdf_range[1][1], pdf_range[1][0]])
     ax.text(pdf_range[0][0] + 5, pdf_range[1][1] - 5, 'PCA reconstruction', fontsize=14)
     ax.set_aspect('auto')
@@ -360,11 +374,13 @@ def plot_residuals(pdf_data, pdf_recon, pdf_2d_samples, popmodel, savefig=False,
 
             ax = fig.add_subplot(gs[i, j])
 
-            err_poisson_post = np.sqrt((pdf_data * ngal) + ((ngal / nsim)**2) * (pdf_2d_samples[ii, :, :] * nsim))
-            image = ngal * (pdf_data - pdf_2d_samples[ii, :, :]) / err_poisson_post
-            im = ax.imshow(image.T, cmap='rainbow', vmin=vmin, vmax=vmax,
+            pdf_recon_samples, _ = utils.func_project_pca(pdf_2d_samples[ii, :, :], meanarr, pca, floor=floor)
+            pdf_recon_plot = np.where((pdf_recon_samples * ngal < 1) & (pdf_data == 0), np.nan, pdf_recon_samples)
+            image = np.sqrt(ngal) * (pdf_data - pdf_recon_plot) / np.sqrt(pdf_recon_samples)
+            chisq = np.nanmean(np.where(np.isfinite(image**2), image**2, np.nan))  # we don't want this to include all the empty space, so use floor here too
+
+            im = ax.imshow(image.T, cmap='bwr', vmin=vmin, vmax=vmax,
                            extent=[pdf_range[0][0], pdf_range[0][1], pdf_range[1][1], pdf_range[1][0]])
-            chisq = np.nanmean(abs(image))
 
             ax.tick_params(axis='both', which='major', labelsize=14)
             ax.set_aspect('auto')
@@ -386,7 +402,7 @@ def plot_residuals(pdf_data, pdf_recon, pdf_2d_samples, popmodel, savefig=False,
             ii += 1
 
     cbar_ax = fig.add_subplot(gs[:, ncol])
-    cbar = fig.colorbar(im, cax=cbar_ax, label=r'${\rm (\rho-\rho_{m})/\sigma_{p}}$')
+    cbar = fig.colorbar(im, cax=cbar_ax, label=r'${\rm (n_o-n_e)/\sqrt{n_e}}$')
     cbar.ax.tick_params(labelsize=14)
 
     if savefig == True:
@@ -395,44 +411,69 @@ def plot_residuals(pdf_data, pdf_recon, pdf_2d_samples, popmodel, savefig=False,
     return gs
 
 
-def plot_stack_residuals(pdf_data, pdf_2d_samples, popmodel, savefig=False, figname='tmp.png',
-                         vmin=-5, vmax=4, title=None, nsim=7000):
-    """ Residuals stacked over many posterior samples, plus the chi^2 distribution.
-    nsim must match the ngal used in the simulator. """
+def plot_stack_residuals(pdf_data, pdf_2d_samples, popmodel, meanarr, pca,
+                         ngal=None, floor=0.0001, savefig=False, figname='tmp.png',
+                         vmin=-3, vmax=3, title=None):
+    """ Poisson-normalised residuals stacked over many posterior samples, plus
+    the chi^2 distribution.
+
+    As in plot_residuals, the expected counts come from the PCA reconstruction
+    of each posterior-sample image, chi^2_nu is the mean squared residual, and
+    cells with <1 expected galaxy and 0 observed galaxies are masked. The
+    stacked map is masked using the sample-averaged reconstruction.
+
+    ngal is the number of observed galaxies (defaults to the size of the
+    sample in popmodel); floor must match the PCA training floor (Fit passes
+    it automatically). Returns the chi^2_nu of each posterior sample. """
+
+    pdf_data = np.asarray(pdf_data)
+    if ngal is None:
+        ngal = len(popmodel['redshifts'])
 
     nsamples = pdf_2d_samples.shape[0]
-    ngal = len(popmodel['redshifts'])
+    print('number of samples in residuals stack:', nsamples)
 
     chisq = np.zeros(nsamples)
 
     for i in range(nsamples):
-        err_poisson_post = np.sqrt((pdf_data * ngal) + ((ngal / nsim)**2) * (pdf_2d_samples[i, :, :] * nsim))
-        hist, hist_edges = np.histogram((ngal * (pdf_data - pdf_2d_samples[i, :, :]) / err_poisson_post).flatten(), range=[-5, 5], bins=20, density=True)
-        image = ngal * (pdf_data - pdf_2d_samples[i, :, :]) / err_poisson_post
+        pdf_recon_samples, _ = utils.func_project_pca(pdf_2d_samples[i, :, :], meanarr, pca, floor=floor)
+        pdf_recon_plot = np.where((pdf_recon_samples * ngal < 1) & (pdf_data == 0), np.nan, pdf_recon_samples)  # set to nan values with <1 expected galaxy AND <1 observed galaxy
 
-        chisq[i] = np.nanmean(abs(image))
+        image_nomask = np.sqrt(ngal) * (pdf_data - pdf_recon_samples) / np.sqrt(pdf_recon_samples)
+        image_mask = np.sqrt(ngal) * (pdf_data - pdf_recon_plot) / np.sqrt(pdf_recon_samples)
+        hist, hist_edges = np.histogram(image_mask.flatten(), range=[-5, 5], bins=20, density=True)
+
+        chisq[i] = np.nanmean(np.where(np.isfinite(image_mask**2), image_mask**2, np.nan))  # want chi^2 to ignore cells with very low probability
+
         if i == 0:
             hist_out = copy.deepcopy(hist)
-            image_out = copy.deepcopy(image)
+            image_out = copy.deepcopy(image_nomask)
+            reconsum_out = copy.deepcopy(pdf_recon_samples)
         else:
             hist_out += hist
-            image_out += image
+            image_out += image_nomask
+            reconsum_out += pdf_recon_samples
 
-    plt.stairs(hist, hist_edges, color='black')
-    plt.xlabel(r'$\chi^2_\nu$')
+    image_out /= nsamples
+    reconsum_out /= nsamples
+
+    image_out_plot = np.where((reconsum_out * ngal < 1) & (pdf_data == 0), np.nan, image_out)
+
+    plt.stairs(hist_out, hist_edges, color='black')
+    plt.xlabel(r'${\rm (n_o-n_e)/\sqrt{n_e}}$')
     plt.ylabel('N(posterior)')
     plt.show()
 
     print('16th, 50th, 84th percentiles of chi^2 distribution:', np.percentile(chisq, [16, 50, 84]))
 
     print()
-    print('number with sigma<1:', len(np.where(abs(image_out / nsamples).flatten() < 5)[0]))
-    print('number with sigma<5:', len(np.where(abs(image_out / nsamples).flatten() < 1)[0]))
-    print('fraction within 1 sigma: ', len(np.where(abs(image_out / nsamples).flatten() < 1)[0]) / len(np.where(abs(image_out / nsamples).flatten() < 5)[0]))
+    print('number with sigma<1:', len(np.where(abs(image_out_plot).flatten() < 5)[0]))
+    print('number with sigma<5:', len(np.where(abs(image_out_plot).flatten() < 1)[0]))
+    print('fraction within 1 sigma: ', len(np.where(abs(image_out_plot).flatten() < 1)[0]) / len(np.where(abs(image_out_plot).flatten() < 5)[0]))
 
     fig, ax = plt.subplots()
-    plt.imshow((image_out / nsamples).T, cmap='rainbow', vmin=-3, vmax=3, extent=[popmodel['pdf_range'][0][0], popmodel['pdf_range'][0][1], popmodel['pdf_range'][1][1], popmodel['pdf_range'][1][0]])
-    plt.colorbar(label=r'${\rm (\rho-\rho_{m})/\sigma_{p}}$')
+    plt.imshow((image_out_plot).T, cmap='rainbow', vmin=vmin, vmax=vmax, extent=[popmodel['pdf_range'][0][0], popmodel['pdf_range'][0][1], popmodel['pdf_range'][1][1], popmodel['pdf_range'][1][0]])
+    plt.colorbar(label=r'${\rm (n_o-n_e)/\sqrt{n_e}}$')
     plt.ylim((popmodel['pdf_range'][1][0], popmodel['pdf_range'][1][1]))
     plt.gca().set_aspect(2.5)
     plt.ylabel('SC2', fontsize=16)
@@ -441,7 +482,7 @@ def plot_stack_residuals(pdf_data, pdf_2d_samples, popmodel, savefig=False, fign
     if title is None:
         plt.text(0.9, 0.9, r"$\chi^2_\nu=$" + str(np.round(np.median(chisq), decimals=2)), fontsize=14, bbox=dict(facecolor='none', edgecolor='black'), transform=ax.transAxes, horizontalalignment='right')
     else:
-        plt.text(0.9, 0.9, title + r" $\chi^2_\nu=$" + str(np.round(np.median(chisq), decimals=2)), fontsize=14, bbox=dict(facecolor='none', edgecolor='black'), transform=ax.transAxes, horizontalalignment='right')
+        plt.text(0.9, 0.1, title + r" $\chi^2_\nu=$" + str(np.round(np.median(chisq), decimals=2)), fontsize=14, bbox=dict(facecolor='none', edgecolor='black'), transform=ax.transAxes, horizontalalignment='right')
 
     if savefig == True:
         plt.savefig(figname, bbox_inches='tight')

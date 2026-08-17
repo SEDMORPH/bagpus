@@ -313,20 +313,30 @@ class Fit:
                                    savefig=save is not None, figname=save or 'tmp.png')
 
     def plot_residuals(self, n_show=6, vmin=-4, vmax=4, save=None):
-        """ Normalised residual maps for individual posterior draws. """
+        """ Poisson-normalised residual maps (n_obs - n_exp)/sqrt(n_exp) for
+        individual posterior draws, with expected counts from the PCA
+        reconstruction of each draw. """
+        meanarr, pca = self._load_pca()
         pdf_2d, pdf_recon, _ = self.data_pca()
         x_samples = self.posterior_predictive()
         return plotting.plot_residuals(pdf_2d, pdf_recon, x_samples[:n_show, :, :],
-                                       self.popmodel, vmin=vmin, vmax=vmax,
-                                       nsim=self.ngal_sims,
+                                       self.popmodel, meanarr, pca,
+                                       ngal=len(self.popmodel.obs),
+                                       floor=self._pca_floor,
+                                       vmin=vmin, vmax=vmax,
                                        savefig=save is not None, figname=save or 'tmp.png')
 
-    def plot_stacked_residuals(self, vmin=-4, vmax=4, save=None):
-        """ Residuals stacked over all forward-simulated posterior draws. """
+    def plot_stacked_residuals(self, vmin=-3, vmax=3, save=None):
+        """ Poisson-normalised residuals stacked over all forward-simulated
+        posterior draws; returns the chi^2_nu of each draw. """
+        meanarr, pca = self._load_pca()
         pdf_2d, _, _ = self.data_pca()
         x_samples = self.posterior_predictive()
         return plotting.plot_stack_residuals(pdf_2d, x_samples, self.popmodel,
-                                             vmin=vmin, vmax=vmax, nsim=self.ngal_sims,
+                                             meanarr, pca,
+                                             ngal=len(self.popmodel.obs),
+                                             floor=self._pca_floor,
+                                             vmin=vmin, vmax=vmax,
                                              savefig=save is not None, figname=save or 'tmp.png')
 
     # ------------------------------------------------------------------
