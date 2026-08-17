@@ -2,9 +2,9 @@
 
 **Bayesian Analysis of Galaxy PopUlations with Spectra**
 
-bagpus infers the *population-level* distributions of galaxy physical parameters — star formation histories, dust, metallicity — by fitting the observed distribution of an entire survey at once, rather than fitting galaxies one by one. It uses simulation-based inference (SBI) with [bagpipes](https://github.com/ACCarnall/bagpipes) as the forward model of individual galaxies, and super-colour distributions as the summary statistic.
+Bagpus infers the *population-level* distributions of galaxy physical parameters — star formation histories, dust, metallicity — by fitting the observed distribution of an entire survey at once, rather than fitting galaxies one by one. It uses simulation-based inference (SBI) with [bagpipes](https://github.com/ACCarnall/bagpipes) as the forward model of individual galaxies, and super-colour distributions as the summary statistic.
 
-The method and its first application (quenching timescales of massive galaxies at 1.7 < z < 2 in the UDS field) are described in the release paper (Wild et al., in press).
+The method and its first application (quenching timescales of massive galaxies at 1.7 < z < 2 in the UDS field) are described in the release paper ([Wild et al. in press](https://ui.adsabs.harvard.edu/abs/2026arXiv260605971W/abstract)).
 
 ## Installation
 
@@ -62,8 +62,8 @@ Version 1 ships with the double power-law SFH (parameterised by quenching half-l
 
 ## Note on code origins
 
-The original code used for the release paper was written the "old-fashioned" way by Vivienne Wild. This public release version has been tidied up by Claude-AI, and made object-orientated to match [bagpipes] in spirit. The results of [bagpus] have been fully bench-marked against the original human-written code. All credit for the structure of the code goes to Adam Carnall who wrote [bagpipes] into the wonderful user-friendly package that it is. [bagpus] *is* more complex than [bagpipes], just by the nature of what it is doing. We are actively working on making it more general. 
+The original code used for the release paper was written the "old-fashioned" way by Vivienne Wild. This public release version has been tidied up by Claude-AI, and made object-orientated to match *bagpipes* in spirit. The results of *bagpus* have been fully bench-marked against the original human-written code. All credit for the structure of the code goes to Adam Carnall who wrote *bagpipes* into the wonderful user-friendly package that it is. *bagpus* is more complex than *bagpipes*, just by the nature of what it is doing. We are actively working on making it more general. 
 
 ## Citation
 
-If you use bagpus, please cite the release paper (`Wild et al. 2026 <https://ui.adsabs.harvard.edu/abs/2026arXiv260605971W/abstract>') and the underlying tools: the super-colours (`Wild et al. 2014 <https://ui.adsabs.harvard.edu/abs/2014MNRAS.440.1880W/abstract>'), bagpipes (`Carnall et al. 2018 <https://ui.adsabs.harvard.edu/abs/2018MNRAS.480.4379C/abstract>') and the sbi package (`Boelts et al. 2025 <https://joss.theoj.org/papers/10.21105/joss.07754>'). 
+If you use bagpus, please cite the release paper ([Wild et al. in press](https://ui.adsabs.harvard.edu/abs/2026arXiv260605971W/abstract)) and the underlying tools: the super-colours ([Wild et al. 2014](https://ui.adsabs.harvard.edu/abs/2014MNRAS.440.1880W/abstract)), bagpipes ([Carnall et al. 2018](https://ui.adsabs.harvard.edu/abs/2018MNRAS.480.4379C/abstract)) and the sbi package ([Boelts et al. 2025](https://joss.theoj.org/papers/10.21105/joss.07754)). 
