@@ -12,4 +12,5 @@ cfg, args = load_config()
 
 fit = build_fit(cfg)
 fit.train(n_pca_components=cfg.n_pca_components,
+          pca_floor=getattr(cfg, 'pca_floor', 0.0001),
           density_estimator=cfg.neural_posterior_model)

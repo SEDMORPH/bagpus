@@ -60,6 +60,7 @@ class Fit:
         # lazily loaded products
         self._meanarr = None
         self._pca = None
+        self._pca_floor = None
         self._posterior = None
         self._samples = None
 
@@ -134,10 +135,17 @@ class Fit:
     # ------------------------------------------------------------------
     # Training: PCA compression + neural posterior estimation
     # ------------------------------------------------------------------
-    def train(self, n_pca_components=20, density_estimator='maf', force=False,
-              diagnostic_plot=False):
+    def train(self, n_pca_components=20, pca_floor=0.0001, density_estimator='maf',
+              force=False, diagnostic_plot=False):
         """ Compress the training simulations with PCA and train the neural
-        posterior estimator. Both products are cached on disk. """
+        posterior estimator. Both products are cached on disk.
+
+        pca_floor replaces empty histogram cells before taking the log for the
+        PCA compression (avoids log 0). The default suits populations of a few
+        thousand galaxies on a ~50x50 grid; if your cell occupancies are very
+        different it may need adjusting. The value is stored with the PCA and
+        automatically reused when the observed data are projected, so the
+        summary statistics stay consistent. """
 
         posterior_path = self.dir_posterior + 'posterior.pt'
         if os.path.exists(posterior_path) and not force:
@@ -150,10 +158,12 @@ class Fit:
 
         meanarr, pca, x_r = utils.func_compress_pca(
             np.array(x), self.popmodel['pdf_range'],
-            n_components=n_pca_components, diagnostic_plot=diagnostic_plot)
+            n_components=n_pca_components, floor=pca_floor,
+            diagnostic_plot=diagnostic_plot)
         torch.save(meanarr, self.dir_training + 'pca_meanarr.pt')
         torch.save(pca, self.dir_training + 'pca.pt')
-        self._meanarr, self._pca = meanarr, pca
+        torch.save(pca_floor, self.dir_training + 'pca_floor.pt')
+        self._meanarr, self._pca, self._pca_floor = meanarr, pca, pca_floor
 
         from sbi.neural_nets import posterior_nn
         from sbi.inference import NPE
@@ -174,6 +184,11 @@ class Fit:
         if self._pca is None:
             self._meanarr = torch.load(self.dir_training + 'pca_meanarr.pt', weights_only=False)
             self._pca = torch.load(self.dir_training + 'pca.pt', weights_only=False)
+            floor_path = self.dir_training + 'pca_floor.pt'
+            if os.path.exists(floor_path):
+                self._pca_floor = torch.load(floor_path, weights_only=False)
+            else:
+                self._pca_floor = 0.0001  # runs trained before the floor was stored
         return self._meanarr, self._pca
 
     @property
@@ -190,11 +205,13 @@ class Fit:
     # Inference on the observed data
     # ------------------------------------------------------------------
     def data_pca(self):
-        """ The observed SC histogram projected onto the PCA basis.
+        """ The observed SC histogram projected onto the PCA basis, using the
+        same floor as the training compression.
         Returns (pdf_2d, pdf_recon, pca_amps). """
         meanarr, pca = self._load_pca()
         pdf_2d = self.popmodel.obs.histogram2d()
-        pdf_recon, pca_amps = utils.func_project_pca(pdf_2d, meanarr, pca)
+        pdf_recon, pca_amps = utils.func_project_pca(pdf_2d, meanarr, pca,
+                                                     floor=self._pca_floor)
         return pdf_2d, pdf_recon, pca_amps
 
     def sample(self, n=1000, force=False):
@@ -216,7 +233,8 @@ class Fit:
         """ Posterior samples for a mock 2D SC histogram (e.g. from the test
         set) — used for recovery checks. Not cached. """
         meanarr, pca = self._load_pca()
-        _, pca_amps = utils.func_project_pca(torch.as_tensor(np.float32(x_mock)), meanarr, pca)
+        _, pca_amps = utils.func_project_pca(torch.as_tensor(np.float32(x_mock)),
+                                             meanarr, pca, floor=self._pca_floor)
         return self.posterior.set_default_x(pca_amps).sample((n,))
 
     @property

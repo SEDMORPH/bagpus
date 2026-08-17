@@ -111,6 +111,8 @@ ncores = 8         # parallel workers for simulation
 # SBI / training settings
 # ---------------------------------------------------------------------------
 n_pca_components = 20
+pca_floor = 0.0001  # floor on empty SC-histogram cells before the log/PCA;
+                    # suits ~thousands of galaxies on a ~50x50 grid
 neural_posterior_model = 'maf'
 n_posterior_samples = 1000
 n_posterior_predictive = 100
