@@ -29,3 +29,12 @@ from . import supercolours
 from . import utils
 
 __version__ = '0.1.0'
+
+
+def __getattr__(name):
+    # bagpus.grids imports bagpipes at module level, which is slow — load it
+    # lazily on first access so plain `import bagpus` stays fast
+    if name == 'grids':
+        import importlib
+        return importlib.import_module('.grids', __name__)
+    raise AttributeError(f"module 'bagpus' has no attribute '{name}'")
