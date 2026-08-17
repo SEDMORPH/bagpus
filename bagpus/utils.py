@@ -7,11 +7,24 @@ model-specific code lives in bagpus.models.
 
 import copy
 import os
+import warnings
+from contextlib import contextmanager
 
 import numpy as np
 import scipy.stats as stats
 import sklearn.decomposition as deco
 import torch
+
+
+@contextmanager
+def _quiet_matmul():
+    """ numpy built on Apple's Accelerate BLAS raises spurious RuntimeWarnings
+    (divide by zero / overflow / invalid value 'encountered in matmul') for
+    perfectly finite matrix products. Callers assert their inputs are finite
+    first, so suppressing these narrowly cannot hide a real problem. """
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='.*encountered in matmul')
+        yield
 
 
 # ---------------------------------------------------------------------------
@@ -203,8 +216,13 @@ def func_compress_pca(x, pdf_range, floor=0.0001, n_components=20, diagnostic_pl
     for i in range(nsims):
         x4[i, :] = x3[i, :, :].flatten()
 
+    if not np.all(np.isfinite(x4)):
+        raise ValueError('func_compress_pca: non-finite values in the log SC '
+                         'histograms — check the input simulations and floor.')
+
     pca = deco.PCA(n_components)
-    x_r = pca.fit(x4).transform(x4)
+    with _quiet_matmul():
+        x_r = pca.fit(x4).transform(x4)
 
     print('explained variance (first %d components): %.2f' % (n_components, sum(pca.explained_variance_ratio_)))
 
@@ -254,8 +272,13 @@ def func_project_pca(pdf_2d, meanarr, pca, floor=0.0001):
     pdf3_2d = (pdf2_2d - meanarr)  # remove the eigen-basis mean
     pdf4_2d = pdf3_2d.flatten()
 
-    pca_amps = np.dot(pdf4_2d, pca.components_.T)
-    pdf_recon = np.dot(pca_amps, pca.components_)
+    if not np.all(np.isfinite(np.asarray(pdf4_2d))):
+        raise ValueError('func_project_pca: non-finite values in the log SC '
+                         'histogram — check the input data and floor.')
+
+    with _quiet_matmul():
+        pca_amps = np.dot(pdf4_2d, pca.components_.T)
+        pdf_recon = np.dot(pca_amps, pca.components_)
 
     # put back into 2D shape, add the mean arr and undo the log to resemble the input data
     pdf_recon = 10**(np.add(pdf_recon.reshape(xsize, ysize), meanarr))
