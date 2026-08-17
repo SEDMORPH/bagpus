@@ -24,3 +24,6 @@ docs/_build/
 .DS_Store
 .claude/
 sbi-logs/
+
+# archive: code on which this repo is based.
+archive/
