@@ -9,7 +9,7 @@ The method and its first application (quenching timescales of massive galaxies a
 ## Installation
 
 ```bash
-git clone https://github.com/vwild/bagpus.git
+git clone https://github.com/SEDMORPH/bagpus.git
 cd bagpus
 pip install -e .
 ```

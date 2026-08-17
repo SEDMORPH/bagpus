@@ -40,7 +40,7 @@ docs = [
 ]
 
 [project.urls]
-Repository = "https://github.com/vwild/bagpus"
+Repository = "https://github.com/SEDMORPH/bagpus"
 
 [tool.setuptools.packages.find]
 include = ["bagpus*"]
