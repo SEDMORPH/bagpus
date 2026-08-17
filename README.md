@@ -60,6 +60,10 @@ fit.plot_posterior_predictive()
 
 Version 1 ships with the double power-law SFH (parameterised by quenching half-life) and Calzetti dust with an Av–sSFR relation, validated against the release paper. The API is designed so that any bagpipes SFH or dust model can be added by subclassing `bagpus.models.SFHModel` / `DustModel` and registering the class — see the *Adding a new model* page of the documentation.
 
+## Note on code origins
+
+The original code used for the release paper was written the "old-fashioned" way by Vivienne Wild. This Public release version has been tidied up by Claude-AI, and made object-orientated to match [bagpipes] in spirit. The results of [bagpus] have been fully bench-marked against the original human-written code. All credit for the structure of the code goes to Adam Carnall who wrote [bagpipes] into the wonderful user-friendly package that it is. [bagpus] *is* more complex than [bagpipes], just by the nature of what it is doing. We are actively working on making it more general. 
+
 ## Citation
 
-If you use bagpus, please cite the release paper and the underlying tools: bagpipes (Carnall et al. 2018) and the sbi package (Tejero-Cantero et al. 2020).
+If you use bagpus, please cite the release paper (Wild et al. 2026) and the underlying tools: bagpipes (Carnall et al. 2018) and the sbi package (Tejero-Cantero et al. 2020).

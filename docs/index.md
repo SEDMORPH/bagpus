@@ -32,6 +32,10 @@ function of cosmic time.
    hyperparameters; applying it to the observed distribution gives the
    population posterior ({class}`bagpus.Fit`).
 
+## Note on code origins
+
+The original code used for the release paper was written the "old-fashioned" way by Vivienne Wild. This Public release version has been tidied up by Claude-AI, and made object-orientated to match [bagpipes] in spirit. The results of [bagpus] have been fully bench-marked against the original human-written code. All credit for the structure of the code goes to Adam Carnall who wrote [bagpipes] into the wonderful user-friendly package that it is. [bagpus] is more complex than [bagpipes], just by the nature of what it is doing. We are actively working on making it more general. 
+
 ```{toctree}
 :maxdepth: 1
 :caption: Getting started

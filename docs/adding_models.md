@@ -1,10 +1,13 @@
 # Adding a new SFH or dust model
 
-bagpus v1 ships with the double power-law SFH (`dblplaw`) and Calzetti dust,
-validated against the release paper. The API is designed so that any SFH or
+bagpus v1 ships with the double power-law SFH (`dblplaw`) and Calzetti dust law,
+validated against the release paper. The code is designed so that any SFH or
 dust model available in bagpipes can be added with a small subclass — but
 **think carefully about the population-level implications first** (see the
-caveats below).
+caveats below). 
+
+**This part of the documentation has been generated entirely by AI, 
+and has not yet been human-verified, so please use with extra caution.** 
 
 ## A new SFH model
 

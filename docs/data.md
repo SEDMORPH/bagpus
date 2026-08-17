@@ -10,9 +10,8 @@
 ## Not included (obtain separately)
 
 * **UDS DR11 catalogues** used in the walkthrough notebook and pipeline
-  scripts: the photometry catalogue (`DR11-2arcsec-Jun-30-2019.fits`) and the
-  super-colour catalogue (`TDL_VWSC_0.5_3.024.5_dr11.fits`). Contact the
-  authors regarding access.
+  scripts: the photometry catalogue (`DR11-2arcsec-Jun-30-2019.fits`, available here https://www.nottingham.ac.uk/astronomy/UDS/DR11/) and the
+  super-colour catalogue (`TDL_VWSC_0.5_3.024.5_dr11.fits` available here https://www.nottingham.ac.uk/astronomy/UDS/data/sc.html). 
 * **Stellar grids** for bagpipes beyond its defaults (e.g. CB19) — see
   [Installation](installation).
 
@@ -35,4 +34,4 @@ of `scripts/step1_prepare.py` for the UDS example).
 If your survey uses different photometric bands, you need an eigenbasis
 computed for those bands (see
 [Wild et al. 2014](https://ui.adsabs.harvard.edu/abs/2014MNRAS.440.1880W/abstract)
-for the super-colour method).
+for the super-colour method, code to do this yourself is in prep. please ask if you are interested).
