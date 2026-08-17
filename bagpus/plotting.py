@@ -231,6 +231,59 @@ def plot_derived(theta_samples, popmodel, names=None, nbins=20, ngal=1000, title
     return {'pdf': pdf_derived_rvs, 'edges': pdf_edges, 'fquench': fquench}
 
 
+def plot_pca_components(pca, popmodel, ncol=5, fname=None):
+    """ The PCA component images used to compress the SC distributions into
+    summary statistics. Check they look sensible: structured components first,
+    running into noise by the last ones — if the last components still show
+    coherent structure, consider increasing n_pca_components. """
+
+    pdf_range = popmodel['pdf_range']
+    pdf_bins = popmodel['pdf_bins']
+
+    n_components = pca.components_.shape[0]
+    comps = np.reshape(pca.components_, (n_components, pdf_bins[0], pdf_bins[1]))
+
+    nrow = int(np.ceil(n_components / ncol))
+
+    fig = plt.figure(figsize=(2 * (ncol + 1), 2 * (nrow + 1)))
+
+    gs = gridspec.GridSpec(nrow, ncol,
+                           wspace=0.0, hspace=0.0,
+                           top=1. - 0.5 / (nrow + 1), bottom=0.5 / (nrow + 1),
+                           left=0.5 / (ncol + 1), right=1 - 0.5 / (ncol + 1))
+
+    ii = 0
+    for i in range(nrow):
+        for j in range(ncol):
+            if ii >= n_components:
+                break
+
+            ax = plt.subplot(gs[i, j])
+            ax.imshow(comps[ii, :, :].T, cmap='GnBu', extent=[pdf_range[0][0], pdf_range[0][1], pdf_range[1][1], pdf_range[1][0]])
+            ax.tick_params(axis='both', which='major', labelsize=15)
+            ax.set_aspect('auto')
+            ax.set_ylim((pdf_range[1][0], pdf_range[1][1]))
+
+            plt.setp(ax.get_xticklabels()[-1], visible=False)
+
+            if j == 0:
+                ax.set_ylabel('SC2', fontsize=16)
+            else:
+                ax.set_yticklabels([])
+
+            if i == nrow - 1:
+                ax.set_xlabel('SC1', fontsize=16)
+            else:
+                ax.set_xticklabels([])
+
+            ii += 1
+
+    if fname is not None:
+        fig.savefig(fname, bbox_inches='tight')
+
+    return fig
+
+
 def plot_draws(pdf_2d, pdf_recon, pdf_2d_samples, popmodel, savefig=False, figname='tmp.png',
                title='Data', vmin=0.0005, vmax=0.02):
     """ Grid of SC maps: the data, its PCA reconstruction, and forward-simulated

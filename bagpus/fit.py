@@ -306,6 +306,13 @@ class Fit:
         return plotting.plot_derived(samples, self.popmodel, list(names), nbins=nbins,
                                      ngal=ngal, pdf_extra=pdf_prior, fname=save)
 
+    def plot_pca_components(self, ncol=5, save=None):
+        """ The PCA component images used as summary statistics — a check that
+        the compression captures structure and the last components are noise.
+        Works from the cached PCA without retraining. """
+        _, pca = self._load_pca()
+        return plotting.plot_pca_components(pca, self.popmodel, ncol=ncol, fname=save)
+
     def plot_posterior_predictive(self, n_show=6, vmin=0.0001, vmax=0.02, save=None):
         """ The observed SC map next to its PCA reconstruction and
         forward-simulated posterior draws. """
