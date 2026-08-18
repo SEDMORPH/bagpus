@@ -7,16 +7,6 @@
 * `UDS/VWSC_eigenbasis_0p5z3_wavemin2500.fits` — the super-colour eigenbasis
   used to project photometry (observed or simulated) onto SC1/SC2/SC3.
 
-```{important}
-The effective wavelengths in the filter list are **part of the eigenbasis
-definition**, not a convenience: they are used to convert model photometry
-from f<sub>ν</sub> to f<sub>λ</sub> before projection, and must be the same
-values that were used when the eigenbasis (and the observed super-colours)
-were constructed. Do not replace them with effective wavelengths computed by
-other tools — different definitions differ at the ~0.5% level per band, which
-would introduce a systematic, band-dependent offset between the simulated and
-observed super-colours.
-```
 
 ## Not included (obtain separately)
 
@@ -48,3 +38,14 @@ If your survey uses different photometric bands, you need an eigenbasis
 computed for those bands (see
 [Wild et al. 2014](https://ui.adsabs.harvard.edu/abs/2014MNRAS.440.1880W/abstract)
 for the super-colour method, code to do this yourself is in prep. please ask if you are interested).
+
+```{important}
+The effective wavelengths in the filter list are **part of the eigenbasis
+definition**, not a convenience: they are used to convert model photometry
+from f<sub>ν</sub> to f<sub>λ</sub> before projection, and must be the same
+values that were used when the eigenbasis (and the observed super-colours)
+were constructed. Do not replace them with effective wavelengths computed by
+other tools — different definitions differ at the ~0.5% level per band, which
+would introduce a systematic, band-dependent offset between the simulated and
+observed super-colours.
+```

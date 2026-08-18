@@ -29,6 +29,9 @@ exclude_patterns = ['_build']
 
 html_theme = 'sphinx_book_theme'
 html_title = 'bagpus'
+html_static_path = ['_static']
+html_css_files = ['custom.css']
+html_logo = '_static/bagpus_logo3.png'
 
 # heavy dependencies not needed to build the docs
 autodoc_mock_imports = ['bagpipes', 'torch', 'sbi', 'fast_histogram', 'joblib',

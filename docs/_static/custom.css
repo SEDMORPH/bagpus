@@ -1,0 +1,6 @@
+/* Shrink the sidebar logo — sphinx-book-theme's default lets it fill the
+   sidebar's full width (.logo__image { height: unset }), which is too
+   dominant for a square logo. */
+.navbar-brand .logo__image {
+    max-width: 66%;
+}
